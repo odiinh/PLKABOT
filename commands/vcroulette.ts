@@ -23,7 +23,7 @@ module.exports = {
   cooldown: 172800,
   data: new SlashCommandBuilder()
     .setName("rr")
-    .setDescription("Play a cheerful game of russian roulette.")
+    .setDescription("Play a cheerful game of *VC* roulette.")
     .addBooleanOption((option) =>
       option
         .setName("override")
@@ -69,15 +69,15 @@ module.exports = {
         }
       }
       var confirmEmbed = new EmbedBuilder()
-        .setTitle("Russian Roulette")
+        .setTitle("*VC* Roulette")
         .setColor("#689cc5")
         .setDescription(
-          "**Welcome!**\n\nYou have asked to play russian roulette with:\n\n" +
+          "**Welcome!**\n\nYou have asked to play *VC* roulette with:\n\n" +
             memberstring +
             "\n\n**Press below when all desired players are in the channel.**"
         );
       var confirmButton = new ButtonBuilder()
-        .setCustomId("confirmRussianRouletteStart")
+        .setCustomId("confirm*VC*RouletteStart")
         .setLabel("Ready")
         .setStyle(ButtonStyle.Success);
       var row =
@@ -97,7 +97,7 @@ module.exports = {
         i.deferUpdate();
         return (
           i.user.id === interaction.user.id &&
-          i.customId === "confirmRussianRouletteStart"
+          i.customId === "confirm*VC*RouletteStart"
         );
       };
       message

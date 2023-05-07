@@ -38,7 +38,7 @@ module.exports = {
     cooldown: 172800,
     data: new discord_js_1.SlashCommandBuilder()
         .setName("rr")
-        .setDescription("Play a cheerful game of russian roulette.")
+        .setDescription("Play a cheerful game of *VC* roulette.")
         .addBooleanOption((option) => option
         .setName("override")
         .setDescription("Resurect yourself and play again!")),
@@ -77,13 +77,13 @@ module.exports = {
                     }
                 }
                 var confirmEmbed = new discord_js_1.EmbedBuilder()
-                    .setTitle("Russian Roulette")
+                    .setTitle("*VC* Roulette")
                     .setColor("#689cc5")
-                    .setDescription("**Welcome!**\n\nYou have asked to play russian roulette with:\n\n" +
+                    .setDescription("**Welcome!**\n\nYou have asked to play *VC* roulette with:\n\n" +
                     memberstring +
                     "\n\n**Press below when all desired players are in the channel.**");
                 var confirmButton = new discord_js_1.ButtonBuilder()
-                    .setCustomId("confirmRussianRouletteStart")
+                    .setCustomId("confirm*VC*RouletteStart")
                     .setLabel("Ready")
                     .setStyle(discord_js_1.ButtonStyle.Success);
                 var row = new discord_js_1.ActionRowBuilder().addComponents(confirmButton);
@@ -94,7 +94,7 @@ module.exports = {
                 const collectorFilter = (i) => {
                     i.deferUpdate();
                     return (i.user.id === interaction.user.id &&
-                        i.customId === "confirmRussianRouletteStart");
+                        i.customId === "confirm*VC*RouletteStart");
                 };
                 message
                     .awaitMessageComponent({
