@@ -1,7 +1,9 @@
 import {readdirSync} from 'fs';
 import {join} from 'path';
 import { Client, Events, GatewayIntentBits, Collection, Interaction, GuildMemberRoleManager, ActionRowBuilder, ButtonBuilder, ButtonInteraction, ButtonStyle, CacheType, CollectorFilter, ComponentType, EmbedBuilder, GuildTextBasedChannel, MessageActionRowComponentBuilder } from 'discord.js';
+import { generateDependencyReport } from '@discordjs/voice';
 
+console.log(generateDependencyReport());
 import * as dotenv from 'dotenv'
 dotenv.config()
 

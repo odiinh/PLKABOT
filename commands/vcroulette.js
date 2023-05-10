@@ -1,27 +1,4 @@
 "use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -33,7 +10,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const discord_js_1 = require("discord.js");
-const voiceClient = __importStar(require("@discordjs/voice"));
+const voice_1 = require("@discordjs/voice");
+const path_1 = require("path");
 module.exports = {
     cooldown: 172800,
     data: new discord_js_1.SlashCommandBuilder()
@@ -68,12 +46,12 @@ module.exports = {
                 var memberstring = "";
                 var memberlist = server.channels.cache.get(member.voice.channelId).members;
                 for (let index = 0; index < memberlist.size; index++) {
-                    const role = memberlist.at(index);
+                    let member = memberlist.at(index);
                     if (index == 0) {
-                        memberstring += `<@${role.id}>`;
+                        memberstring += `<@${member.id}>`;
                     }
                     else {
-                        memberstring += `\n<@${role.id}>`;
+                        memberstring += `\n<@${member.id}>`;
                     }
                 }
                 var confirmEmbed = new discord_js_1.EmbedBuilder()
@@ -115,11 +93,62 @@ module.exports = {
             function game(interaction) {
                 return __awaiter(this, void 0, void 0, function* () {
                     var channel = member.voice.channel;
-                    voiceClient.joinVoiceChannel({
+                    (0, voice_1.joinVoiceChannel)({
                         channelId: channel === null || channel === void 0 ? void 0 : channel.id,
                         guildId: channel.guild.id,
                         adapterCreator: channel.guild.voiceAdapterCreator,
                     });
+                    const connection = (0, voice_1.getVoiceConnection)(server.id);
+                    const player = (0, voice_1.createAudioPlayer)();
+                    const alive = (0, voice_1.createAudioResource)((0, path_1.join)(process.cwd(), "/sound/alive.mp3"));
+                    const dead = (0, voice_1.createAudioResource)((0, path_1.join)(process.cwd(), "/sound/dth.mp3"));
+                    connection.subscribe(player);
+                    connection.on(voice_1.VoiceConnectionStatus.Ready, () => __awaiter(this, void 0, void 0, function* () {
+                        memberlist = server.channels.cache.get(String(member.voice.channelId)).members;
+                        memberlist.delete(interaction.client.user.id);
+                        var gameEmbed = new discord_js_1.EmbedBuilder()
+                            .setTitle("*VC* Roulette")
+                            .setColor("#689cc5");
+                        memberlist.forEach(element => {
+                            gameEmbed.addFields({ name: element.user.tag, value: "..." });
+                        });
+                        interaction.editReply({ embeds: [gameEmbed] });
+                        var playedUserCount = 0;
+                        var died = false;
+                        var activeChamber = Math.round(Math.random() * 6);
+                        while (playedUserCount < memberlist.size - 1 && died === false) {
+                            var tag = memberlist.at(playedUserCount).user.tag;
+                            gameEmbed.spliceFields(playedUserCount, 1, { name: "`" + tag + "`", value: ":hourglass:" });
+                            interaction.editReply({ embeds: [gameEmbed] });
+                            var chanceNo = Math.round(Math.random() * 6);
+                            if (chanceNo == activeChamber) {
+                                player.play(dead);
+                                player.once(voice_1.AudioPlayerStatus.Idle, () => {
+                                    member.kick("Shot to the head by .44 magnum");
+                                    gameEmbed.spliceFields(playedUserCount, 1, { name: tag, value: ":skull:" });
+                                });
+                            }
+                            else {
+                                player.play(alive);
+                                player.once(voice_1.AudioPlayerStatus.Idle, () => {
+                                    gameEmbed.spliceFields(playedUserCount, 1, { name: tag, value: ":sweat_smile:" });
+                                });
+                            }
+                            playedUserCount++;
+                            yield new Promise(resolve => setTimeout(resolve, 2000));
+                        }
+                    }));
+                    connection.on(voice_1.VoiceConnectionStatus.Disconnected, (oldState, newState) => __awaiter(this, void 0, void 0, function* () {
+                        try {
+                            yield Promise.race([
+                                (0, voice_1.entersState)(connection, voice_1.VoiceConnectionStatus.Signalling, 5000),
+                                (0, voice_1.entersState)(connection, voice_1.VoiceConnectionStatus.Connecting, 5000),
+                            ]);
+                        }
+                        catch (error) {
+                            connection.destroy();
+                        }
+                    }));
                 });
             }
         });

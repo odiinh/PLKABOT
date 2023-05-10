@@ -16,8 +16,10 @@ import {
   CollectorFilter,
   ComponentType,
   VoiceBasedChannel,
+  APIEmbedField,
 } from "discord.js";
-import * as voiceClient from '@discordjs/voice'
+import { AudioPlayerStatus, VoiceConnection, VoiceConnectionStatus, createAudioPlayer, createAudioResource, entersState, getVoiceConnection, joinVoiceChannel } from '@discordjs/voice'
+import {join} from "path"
 
 module.exports = {
   cooldown: 172800,
@@ -55,17 +57,13 @@ module.exports = {
       interaction.reply({ embeds: [noVoiceChannel] });
     } else {
       var memberstring = "";
-      var memberlist = (
-        server.channels.cache.get(
-          member.voice.channelId
-        ) as BaseGuildVoiceChannel
-      ).members;
+      var memberlist = (server.channels.cache.get(member.voice.channelId) as BaseGuildVoiceChannel).members;
       for (let index = 0; index < memberlist.size; index++) {
-        const role = memberlist.at(index) as GuildMember;
+        let member = memberlist.at(index) as GuildMember;
         if (index == 0) {
-          memberstring += `<@${role.id}>`;
+          memberstring += `<@${member.id}>`;
         } else {
-          memberstring += `\n<@${role.id}>`;
+          memberstring += `\n<@${member.id}>`;
         }
       }
       var confirmEmbed = new EmbedBuilder()
@@ -118,10 +116,70 @@ module.exports = {
     }
     async function game(interaction: CommandInteraction) {
         var channel = member.voice.channel as VoiceBasedChannel
-        voiceClient.joinVoiceChannel({
+        joinVoiceChannel({
             channelId: channel?.id as string, 
             guildId: channel.guild.id,
             adapterCreator: channel.guild.voiceAdapterCreator,})
+        const connection = getVoiceConnection(server.id) as VoiceConnection;
+        const player = createAudioPlayer();
+        const alive = createAudioResource(join(process.cwd(),"/sound/alive.mp3"))
+        const dead = createAudioResource(join(process.cwd(),"/sound/dth.mp3"))
+        connection.subscribe(player)
+        connection.on(VoiceConnectionStatus.Ready, async () => {
+          memberlist = (server.channels.cache.get(String(member.voice.channelId)) as BaseGuildVoiceChannel).members;
+          memberlist.delete(interaction.client.user.id)
+          var gameEmbed = new EmbedBuilder()
+            .setTitle("*VC* Roulette")
+            .setColor("#689cc5");
+          memberlist.forEach(element => {
+            gameEmbed.addFields({name:element.user.tag, value:"..."})
+          });
+          interaction.editReply({embeds:[gameEmbed]})
+          
+
+          var playedUserCount = 0
+          var died = false
+          var activeChamber = Math.round(Math.random()*6)
+          while (playedUserCount<memberlist.size-1 && died === false) {
+            var tag = (memberlist.at(playedUserCount)as GuildMember).user.tag
+            gameEmbed.spliceFields(playedUserCount,1,{name: "`"+tag+"`", value:":hourglass:" })
+            interaction.editReply({embeds:[gameEmbed]})
+            var chanceNo = Math.round(Math.random()*6)
+            if (chanceNo == activeChamber) {
+              player.play(dead)
+              player.once(AudioPlayerStatus.Idle, () => {
+                member.kick("Shot to the head by .44 magnum")
+                gameEmbed.spliceFields(playedUserCount,1,{name: tag, value:":skull:" })
+              });
+
+            } else {
+              player.play(alive)
+              player.once(AudioPlayerStatus.Idle, () => {
+                gameEmbed.spliceFields(playedUserCount,1,{name: tag, value:":sweat_smile:"})
+              });
+            }
+            playedUserCount++
+            await new Promise(resolve => setTimeout(resolve, 2000));
+          }
+        })
+
+
+
+
+
+
+
+
+        connection.on(VoiceConnectionStatus.Disconnected, async (oldState, newState) => {
+          try {
+            await Promise.race([
+              entersState(connection, VoiceConnectionStatus.Signalling, 5_000),
+              entersState(connection, VoiceConnectionStatus.Connecting, 5_000),
+            ]);
+          } catch (error) {
+            connection.destroy();
+          }
+        });
     }
   },
 };
