@@ -18,13 +18,22 @@ import {
   VoiceBasedChannel,
   APIEmbedField,
 } from "discord.js";
-import { AudioPlayerStatus, VoiceConnection, VoiceConnectionStatus, createAudioPlayer, createAudioResource, entersState, getVoiceConnection, joinVoiceChannel } from '@discordjs/voice'
+import {
+  AudioPlayerStatus,
+  VoiceConnection,
+  VoiceConnectionStatus,
+  createAudioPlayer,
+  createAudioResource,
+  entersState,
+  getVoiceConnection,
+  joinVoiceChannel,
+} from "@discordjs/voice";
 import {join} from "path"
 
 module.exports = {
   cooldown: 172800,
   data: new SlashCommandBuilder()
-    .setName("rr")
+    .setName("vc-roulette")
     .setDescription("Play a cheerful game of *VC* roulette.")
     .addBooleanOption((option) =>
       option

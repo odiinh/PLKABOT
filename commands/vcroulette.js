@@ -15,7 +15,7 @@ const path_1 = require("path");
 module.exports = {
     cooldown: 172800,
     data: new discord_js_1.SlashCommandBuilder()
-        .setName("rr")
+        .setName("vc-roulette")
         .setDescription("Play a cheerful game of *VC* roulette.")
         .addBooleanOption((option) => option
         .setName("override")

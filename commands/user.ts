@@ -1,4 +1,4 @@
-import {SlashCommandBuilder, CommandInteraction, GuildMember, EmbedBuilder, Guild, GuildEmoji, User, Role} from "discord.js"
+import {SlashCommandBuilder, CommandInteraction, GuildMember, EmbedBuilder, Guild, User, Role} from "discord.js"
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('user')
