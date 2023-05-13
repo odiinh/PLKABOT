@@ -100,8 +100,6 @@ module.exports = {
                     });
                     const connection = (0, voice_1.getVoiceConnection)(server.id);
                     const player = (0, voice_1.createAudioPlayer)();
-                    const alive = (0, voice_1.createAudioResource)((0, path_1.join)(process.cwd(), "/sound/alive.mp3"));
-                    const dead = (0, voice_1.createAudioResource)((0, path_1.join)(process.cwd(), "/sound/dth.mp3"));
                     connection.subscribe(player);
                     connection.on(voice_1.VoiceConnectionStatus.Ready, () => __awaiter(this, void 0, void 0, function* () {
                         memberlist = server.channels.cache.get(String(member.voice.channelId)).members;
@@ -115,28 +113,44 @@ module.exports = {
                         interaction.editReply({ embeds: [gameEmbed] });
                         var playedUserCount = 0;
                         var died = false;
-                        var activeChamber = Math.round(Math.random() * 6);
-                        while (playedUserCount < memberlist.size - 1 && died === false) {
-                            var tag = memberlist.at(playedUserCount).user.tag;
+                        var bulletChamber = Math.round(Math.random() * 5);
+                        var currentChamber = Math.round(Math.random() * 5);
+                        while (playedUserCount <= memberlist.size - 1 && died === false) {
+                            currentChamber = currentChamber % 6;
+                            console.log(currentChamber == bulletChamber ? `BANG: ${currentChamber} == ${bulletChamber}` : `SAFE ${currentChamber} != ${bulletChamber}`);
+                            var dead = (0, voice_1.createAudioResource)((0, path_1.join)(process.cwd(), "/sound/dth.mp3"));
+                            var alive = (0, voice_1.createAudioResource)((0, path_1.join)(process.cwd(), "/sound/alive.mp3"));
+                            var activeMember = memberlist.at(playedUserCount);
+                            var tag = activeMember.user.tag;
                             gameEmbed.spliceFields(playedUserCount, 1, { name: "`" + tag + "`", value: ":hourglass:" });
                             interaction.editReply({ embeds: [gameEmbed] });
-                            var chanceNo = Math.round(Math.random() * 6);
-                            if (chanceNo == activeChamber) {
+                            if (currentChamber == bulletChamber) {
                                 player.play(dead);
-                                player.once(voice_1.AudioPlayerStatus.Idle, () => {
-                                    member.kick("Shot to the head by .44 magnum");
-                                    gameEmbed.spliceFields(playedUserCount, 1, { name: tag, value: ":skull:" });
+                                yield new Promise(resolve => {
+                                    player.once(voice_1.AudioPlayerStatus.Idle, () => {
+                                        if (activeMember.kickable === true)
+                                            activeMember.kick("Shot to the head by a 44 magnum!");
+                                        gameEmbed.spliceFields(playedUserCount, 1, { name: tag, value: ":skull:" });
+                                        interaction.editReply({ embeds: [gameEmbed] });
+                                        died = true;
+                                        resolve();
+                                    });
                                 });
                             }
                             else {
                                 player.play(alive);
-                                player.once(voice_1.AudioPlayerStatus.Idle, () => {
-                                    gameEmbed.spliceFields(playedUserCount, 1, { name: tag, value: ":sweat_smile:" });
+                                yield new Promise(resolve => {
+                                    player.once(voice_1.AudioPlayerStatus.Idle, () => {
+                                        gameEmbed.spliceFields(playedUserCount, 1, { name: tag, value: ":sweat_smile:" });
+                                        interaction.editReply({ embeds: [gameEmbed] });
+                                        resolve();
+                                    });
                                 });
                             }
                             playedUserCount++;
-                            yield new Promise(resolve => setTimeout(resolve, 2000));
+                            currentChamber++;
                         }
+                        connection.disconnect();
                     }));
                     connection.on(voice_1.VoiceConnectionStatus.Disconnected, (oldState, newState) => __awaiter(this, void 0, void 0, function* () {
                         try {

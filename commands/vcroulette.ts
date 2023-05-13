@@ -131,8 +131,6 @@ module.exports = {
             adapterCreator: channel.guild.voiceAdapterCreator,})
         const connection = getVoiceConnection(server.id) as VoiceConnection;
         const player = createAudioPlayer();
-        const alive = createAudioResource(join(process.cwd(),"/sound/alive.mp3"))
-        const dead = createAudioResource(join(process.cwd(),"/sound/dth.mp3"))
         connection.subscribe(player)
         connection.on(VoiceConnectionStatus.Ready, async () => {
           memberlist = (server.channels.cache.get(String(member.voice.channelId)) as BaseGuildVoiceChannel).members;
@@ -148,28 +146,42 @@ module.exports = {
 
           var playedUserCount = 0
           var died = false
-          var activeChamber = Math.round(Math.random()*6)
-          while (playedUserCount<memberlist.size-1 && died === false) {
-            var tag = (memberlist.at(playedUserCount)as GuildMember).user.tag
+          var bulletChamber = Math.round(Math.random()*5)
+          var currentChamber = Math.round(Math.random()*5)
+          while (playedUserCount<=memberlist.size-1 && died === false) {
+            currentChamber = currentChamber % 6
+            console.log(currentChamber == bulletChamber ? `BANG: ${currentChamber} == ${bulletChamber}` : `SAFE ${currentChamber} != ${bulletChamber}`)
+            var dead = createAudioResource(join(process.cwd(),"/sound/dth.mp3"))
+            var alive = createAudioResource(join(process.cwd(),"/sound/alive.mp3"))
+            var activeMember = (memberlist.at(playedUserCount)as GuildMember)
+            var tag = activeMember.user.tag
             gameEmbed.spliceFields(playedUserCount,1,{name: "`"+tag+"`", value:":hourglass:" })
             interaction.editReply({embeds:[gameEmbed]})
-            var chanceNo = Math.round(Math.random()*6)
-            if (chanceNo == activeChamber) {
+            if (currentChamber == bulletChamber) {
               player.play(dead)
-              player.once(AudioPlayerStatus.Idle, () => {
-                member.kick("Shot to the head by .44 magnum")
-                gameEmbed.spliceFields(playedUserCount,1,{name: tag, value:":skull:" })
+              await new Promise<void>(resolve => {
+                player.once(AudioPlayerStatus.Idle, () => {
+                  if (activeMember.kickable === true) activeMember.kick("Shot to the head by a 44 magnum!")
+                  gameEmbed.spliceFields(playedUserCount,1,{name: tag, value:":skull:" })
+                  interaction.editReply({embeds:[gameEmbed]})
+                  died = true
+                  resolve()
+                });
               });
-
             } else {
               player.play(alive)
+              await new Promise<void>(resolve => {
               player.once(AudioPlayerStatus.Idle, () => {
                 gameEmbed.spliceFields(playedUserCount,1,{name: tag, value:":sweat_smile:"})
+                interaction.editReply({embeds:[gameEmbed]})
+                  resolve()
+                });
               });
             }
             playedUserCount++
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            currentChamber++
           }
+          connection.disconnect()
         })
 
 
