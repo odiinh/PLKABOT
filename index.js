@@ -38,11 +38,30 @@ const discord_js_1 = require("discord.js");
 const dotenv = __importStar(require("dotenv"));
 dotenv.config();
 // Create a new client instance
-const client = new discord_js_1.Client({ intents: [discord_js_1.GatewayIntentBits.Guilds, discord_js_1.GatewayIntentBits.GuildMembers, discord_js_1.GatewayIntentBits.GuildVoiceStates] });
+const client = new discord_js_1.Client({ intents: [discord_js_1.GatewayIntentBits.Guilds, discord_js_1.GatewayIntentBits.GuildMembers, discord_js_1.GatewayIntentBits.GuildVoiceStates, discord_js_1.GatewayIntentBits.GuildPresences] });
+var statuses;
 // We use 'c' for the event parameter to keep it separate from the already defined 'client'
 client.once(discord_js_1.Events.ClientReady, c => {
     console.log(`Ready! Logged in as ${c.user.tag} at ${(new Date).toLocaleTimeString()}`);
+    setInterval(collectNsetStatuses, 600000);
 });
+function collectNsetStatuses() {
+    var _a;
+    return __awaiter(this, void 0, void 0, function* () {
+        statuses = require("./status.json");
+        var presence = (yield client.guilds.fetch("974616319620161546").then(g => g.members.fetch("701977001895919717").then(m => m.presence)));
+        presence.activities.forEach((a => {
+            if (a.type === discord_js_1.ActivityType.Custom) {
+                var currentStatus = String(a.state);
+                if (statuses.indexOf(currentStatus) == -1 && currentStatus != "null") {
+                    statuses.push(currentStatus);
+                    (0, fs_1.writeFileSync)("./status.json", JSON.stringify(statuses));
+                }
+            }
+        }));
+        (_a = client.user) === null || _a === void 0 ? void 0 : _a.setActivity({ name: String('"' + statuses[Math.floor(Math.random() * statuses.length)]) + '"', type: discord_js_1.ActivityType.Listening });
+    });
+}
 client.commands = new discord_js_1.Collection();
 client.cooldowns = new discord_js_1.Collection();
 const commandsPath = (0, path_1.join)(__dirname, 'commands');

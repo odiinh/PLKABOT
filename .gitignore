@@ -1,3 +1,7 @@
+### statuses ###
+status.json
+
+
 ### VisualStudioCode ###
 .vscode/*   
 # Maybe .vscode/**/* instead - see comments

@@ -1,6 +1,6 @@
-import {readdirSync} from 'fs';
+import {readdirSync, writeFileSync} from 'fs';
 import {join} from 'path';
-import { Client, Events, GatewayIntentBits, Collection, Interaction, GuildMemberRoleManager, ActionRowBuilder, ButtonBuilder, ButtonInteraction, ButtonStyle, CacheType, CollectorFilter, ComponentType, EmbedBuilder, GuildTextBasedChannel, MessageActionRowComponentBuilder } from 'discord.js';
+import { Client, Events, GatewayIntentBits, Collection, Interaction, GuildMemberRoleManager, ActionRowBuilder, ButtonBuilder, ButtonInteraction, ButtonStyle, CacheType, CollectorFilter, ComponentType, EmbedBuilder, GuildTextBasedChannel, MessageActionRowComponentBuilder, ActivityType, Presence } from 'discord.js';
 import * as dotenv from 'dotenv'
 dotenv.config()
 
@@ -10,13 +10,28 @@ interface ClientWithCommands extends Client<boolean> {
 	cooldowns: Collection<string, any>
 }
 // Create a new client instance
-const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildVoiceStates] }) as ClientWithCommands;
-
+const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildVoiceStates, GatewayIntentBits.GuildPresences] }) as ClientWithCommands;
+var statuses:String[] 
 // We use 'c' for the event parameter to keep it separate from the already defined 'client'
 client.once(Events.ClientReady, c => {
 	console.log(`Ready! Logged in as ${c.user.tag} at ${(new Date).toLocaleTimeString()}`);
+	setInterval(collectNsetStatuses, 600000)
 });
 
+async function collectNsetStatuses() {
+	statuses = require("./status.json")
+	var presence = (await client.guilds.fetch("974616319620161546").then(g => g.members.fetch("701977001895919717").then(m => m.presence))) as Presence
+	presence.activities.forEach((a=>{
+		if (a.type === ActivityType.Custom) {
+			var currentStatus = String(a.state)
+			if (statuses.indexOf(currentStatus) == -1 && currentStatus != "null") {
+				statuses.push(currentStatus)
+				writeFileSync("./status.json", JSON.stringify(statuses))
+			}
+		}
+	}))
+	client.user?.setActivity({name:String('"'+ statuses[Math.floor(Math.random() * statuses.length)])+'"', type:ActivityType.Listening})
+}
 
 client.commands = new Collection()
 client.cooldowns = new Collection()
