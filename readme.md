@@ -12,6 +12,7 @@ Other users wishing to enable command override must have their request apporved 
  - [x] **/server** - Replies with a list of server information.
  - [x] **/user** - Replies with a list of user information. *Can be used with a mention to get information about another user.*
  - [x] **/massdelete** - Deletes last 5 messages in current channel which contain the term. *Can be used with an override to delete all occur messages.* 
+ - [x] **/vc-roulette** - All users in the executor's voice channel get a 1/6th chance of getting kicked from the server.
 
 ## __Todo List__ *(not definite)*
 - **Random clip command**: server links their medal to account id, allowing for a random clip to be pulled from anyone or a specific members account.
@@ -22,6 +23,5 @@ Other users wishing to enable command override must have their request apporved 
 - **Valorant API** player stats but mainly provide announcements and updates to do with Valorant Premiere #PLKA FIGHTING
 - **TS api** information (sensitive however so may lock off to only verified individuals)
 - **source code**: print the code or link to github source for a specified command, because why not 
-- **voice channel roulette**: all users in the executor's voice channel get a 1/6th chance of getting kicked from the server.
 
 

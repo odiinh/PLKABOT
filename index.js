@@ -35,8 +35,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const fs_1 = require("fs");
 const path_1 = require("path");
 const discord_js_1 = require("discord.js");
-const voice_1 = require("@discordjs/voice");
-console.log((0, voice_1.generateDependencyReport)());
 const dotenv = __importStar(require("dotenv"));
 dotenv.config();
 // Create a new client instance
